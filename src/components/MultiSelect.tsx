@@ -1,12 +1,12 @@
-import * as React from 'react';
-import { Theme, useTheme } from '@mui/material/styles';
-import Box from '@mui/material/Box';
-import OutlinedInput from '@mui/material/OutlinedInput';
-import InputLabel from '@mui/material/InputLabel';
-import MenuItem from '@mui/material/MenuItem';
-import FormControl from '@mui/material/FormControl';
-import Select, { SelectChangeEvent } from '@mui/material/Select';
-import Chip from '@mui/material/Chip';
+import * as React from "react";
+import { Theme, useTheme } from "@mui/material/styles";
+import Box from "@mui/material/Box";
+import OutlinedInput from "@mui/material/OutlinedInput";
+import InputLabel from "@mui/material/InputLabel";
+import MenuItem from "@mui/material/MenuItem";
+import FormControl from "@mui/material/FormControl";
+import Select, { SelectChangeEvent } from "@mui/material/Select";
+import Chip from "@mui/material/Chip";
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -19,21 +19,21 @@ const MenuProps = {
   },
 };
 
-function getStyles(id: number, selected: readonly number[], theme: Theme) {
+function getStyles(id: any, selected: readonly any[], theme: Theme) {
   return {
     fontWeight:
-        selected.indexOf(id) === -1
-            ? theme.typography.fontWeightRegular
-            : theme.typography.fontWeightMedium,
+      selected.indexOf(id) === -1
+        ? theme.typography.fontWeightRegular
+        : theme.typography.fontWeightMedium,
   };
 }
 
 interface SelectProps {
-    name: string;
-    label: string;
-    selected: readonly number[];
-    options: { id: number, label: string }[];
-    onChange: (selected: number[]) => void;
+  name: string;
+  label: string;
+  selected: readonly any[];
+  options: { id: any; label: string }[];
+  onChange: (selected: any[]) => void;
 }
 
 export default function MultipleSelectChip(props: SelectProps) {
@@ -45,12 +45,12 @@ export default function MultipleSelectChip(props: SelectProps) {
     const {
       target: { value },
     } = event;
-    if (typeof value !== 'string') onChange(value as number[]);
+    if (typeof value !== "string") onChange(value as any[]);
   };
 
   return (
     <div>
-      <FormControl sx={{ width: '100%' }}>
+      <FormControl sx={{ width: "100%" }}>
         <InputLabel>{label}</InputLabel>
         <Select
           name={name}
@@ -60,9 +60,12 @@ export default function MultipleSelectChip(props: SelectProps) {
           required
           input={<OutlinedInput label={label} />}
           renderValue={(selected) => (
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
               {selected.map((value) => (
-                <Chip key={value} label={options?.find(option => option.id === value)?.label} />
+                <Chip
+                  key={value}
+                  label={options?.find((option) => option.id === value)?.label}
+                />
               ))}
             </Box>
           )}

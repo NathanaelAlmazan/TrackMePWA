@@ -1,5 +1,4 @@
-import { gql } from '../../__generated__/gql';
-
+import { gql } from "../../__generated__/gql";
 
 // ================================ TYPES =================================
 
@@ -10,7 +9,7 @@ export const GET_TYPES = gql(`
             label
         }
     }
-`)
+`);
 
 export const CREATE_TYPE = gql(`
     mutation CreateDocumentType($label: String!) {
@@ -19,7 +18,7 @@ export const CREATE_TYPE = gql(`
             label
         }
     }
-`)
+`);
 
 export const UPDATE_TYPE = gql(`
     mutation UpdateDocumentType($id: Int!, $label: String!) {
@@ -28,7 +27,7 @@ export const UPDATE_TYPE = gql(`
             label
         }
     }
-`)
+`);
 
 export const DELETE_TYPE = gql(`
     mutation DeleteDocumentType($id: Int!) {
@@ -37,7 +36,7 @@ export const DELETE_TYPE = gql(`
             label
         }
     }
-`)
+`);
 
 // ================================ PURPOSES =================================
 
@@ -48,7 +47,7 @@ export const GET_PURPOSES = gql(`
             label
         }
     }
-`)
+`);
 
 export const CREATE_PURPOSE = gql(`
     mutation CreateDocumentPurpose($label: String!) {
@@ -57,7 +56,7 @@ export const CREATE_PURPOSE = gql(`
             label
         }
     }
-`)
+`);
 
 export const UPDATE_PURPOSE = gql(`
     mutation UpdateDocumentPurpose($id: Int!, $label: String!) {
@@ -66,7 +65,7 @@ export const UPDATE_PURPOSE = gql(`
             label
         }
     }
-`)
+`);
 
 export const DELETE_PURPOSE = gql(`
     mutation DeleteDocumentPurpose($id: Int!) {
@@ -75,7 +74,7 @@ export const DELETE_PURPOSE = gql(`
             label
         }
     }
-`)
+`);
 
 // ================================ STATUS =================================
 
@@ -87,7 +86,7 @@ export const GET_STATUSES = gql(`
             category
         }
     }
-`)
+`);
 
 export const CREATE_STATUS = gql(`
     mutation CreateDocumentStatus($label: String!, $category: Status!) {
@@ -97,7 +96,7 @@ export const CREATE_STATUS = gql(`
             category
         }
     }
-`)
+`);
 
 export const UPDATE_STATUS = gql(`
     mutation UpdateDocumentStatus($id: Int!, $label: String!, $category: Status!) {
@@ -107,7 +106,7 @@ export const UPDATE_STATUS = gql(`
             category
         }
     }
-`)
+`);
 
 export const DELETE_STATUS = gql(`
     mutation DeleteDocumentStatus($id: Int!) {
@@ -125,7 +124,7 @@ export const GET_TEMP_REF_NUM = gql(`
     query TempReferenceNum {
         getTempReferenceNum
     }
-`)
+`);
 
 export const GET_DOCUMENT_SUMMARY = gql(`
     query GetDocumentSummary {
@@ -137,38 +136,50 @@ export const GET_DOCUMENT_SUMMARY = gql(`
             referred
         }
     }
-`)
+`);
 
 export const GET_DOCUMENTS = gql(`
-    query GetDocuments($officeId: Int) {
-        getDocuments(officeId: $officeId) {
+    query GetDocuments($officerId: String!) {
+        getDocuments(officerId: $officerId) {
             referenceNum
             subject
             description
             receivedFrom
-            refferedTo {
-                name
+            referredTo {
+                office {
+                    id
+                    name
+                }
+                status {
+                    id
+                    label
+                    category
+                }
             }
+            status
             tag
-            status {
-                label
-                category
-            }
             dateCreated
         }
     }
-`)
+`);
 
 export const GET_DOCUMENT_BY_ID = gql(`
-    query GetDocumentById($referenceNum: String!) {
+    query GetDocumentById($referenceNum: String!, $officerId: String!) {
         getDocumentById(referenceNum: $referenceNum) {
             referenceNum
             subject
             description
             receivedFrom
-            refferedTo {
-                id
-                name
+            referredTo {
+                office {
+                    id 
+                    name
+                }
+                status {
+                    id
+                    label
+                    category
+                }
             }
             type {
                 id
@@ -178,29 +189,10 @@ export const GET_DOCUMENT_BY_ID = gql(`
                 id
                 label
             }
+            status
             tag
-            status {
-                id
-                label
-                category
-            }
             dateCreated
             dateDue
-            comments {
-                id
-                sender {
-                    uuid
-                    avatar
-                    firstName
-                    lastName
-                    position {
-                        label
-                    }
-                }   
-                files
-                message
-                dateCreated
-            }
             signatory {
                 uuid
                 avatar
@@ -215,25 +207,65 @@ export const GET_DOCUMENT_BY_ID = gql(`
                     name
                 }
             }
+            assigned(officerId: $officerId) {
+                uuid
+                position {
+                    role
+                }
+            }
+            comments(officerId: $officerId) {
+                id
+                message
+                sender {
+                    uuid
+                    avatar
+                    firstName
+                    lastName
+                    position {
+                        role
+                    }
+                    office {
+                        name
+                    }
+                }
+                recipient {
+                    uuid
+                    avatar
+                    firstName
+                    lastName
+                    position {
+                        role
+                    }
+                    office {
+                        name
+                    }
+                }
+                dateCreated
+            }
+            recipients(officerId: $officerId) {
+                uuid
+                firstName
+                lastName
+            }
         }
     }
-`)
+`);
 
 export const CREATE_DOCUMENT = gql(`
-    mutation CreateDocument($subject: String!, $description: String!, $receivedFrom: String!, $typeId: Int!, $purposeId: Int!, $statusId: Int!, $signatureId: String!, $dateDue: String!, $refferedTo: [Int!]!, $tag: Tags) {
-        createDocument(subject: $subject, description: $description, receivedFrom: $receivedFrom, typeId: $typeId, purposeId: $purposeId, statusId: $statusId, signatureId: $signatureId, dateDue: $dateDue, refferedTo: $refferedTo, tag: $tag) {
+    mutation CreateDocument($subject: String!, $description: String!, $receivedFrom: String!, $typeId: Int!, $purposeId: Int!, $dateDue: String!, $signatureId: String!, $referredTo: [ReferralInput!]!, $tag: Tags) {
+        createDocument(subject: $subject, description: $description, receivedFrom: $receivedFrom, typeId: $typeId, purposeId: $purposeId, dateDue: $dateDue, signatureId: $signatureId, referredTo: $referredTo, tag: $tag) {
             referenceNum
         }
     }
-`)
+`);
 
 export const UPDATE_DOCUMENT = gql(`
-    mutation UpdateDocument($referenceNum: String!, $subject: String, $description: String, $receivedFrom: String, $typeId: Int, $purposeId: Int, $statusId: Int, $signatureId: String!, $tag: Tags, $dateDue: String, $refferedTo: [Int]) {
-        updateDocument(referenceNum: $referenceNum, subject: $subject, description: $description, receivedFrom: $receivedFrom, typeId: $typeId, purposeId: $purposeId, statusId: $statusId, signatureId: $signatureId, tag: $tag, dateDue: $dateDue, refferedTo: $refferedTo) {
+    mutation UpdateDocument($referenceNum: String!, $signatureId: String!, $subject: String, $description: String, $receivedFrom: String, $typeId: Int, $purposeId: Int, $tag: Tags, $dateDue: String) {
+        updateDocument(referenceNum: $referenceNum, signatureId: $signatureId, subject: $subject, description: $description, receivedFrom: $receivedFrom, typeId: $typeId, purposeId: $purposeId, tag: $tag, dateDue: $dateDue) {
             referenceNum
         }
     }
-`)
+`);
 
 export const DELETE_DOCUMENT = gql(`
     mutation DeleteDocument($referenceNum: String!) {
@@ -241,24 +273,15 @@ export const DELETE_DOCUMENT = gql(`
             subject
         }
     }
-`)
+`);
 
 export const UPDATE_DOCUMENT_STATUS = gql(`
-    mutation DocumentUpdateStatus($referenceNum: String!, $statusId: Int!) {
-        documentUpdateStatus(referenceNum: $referenceNum, statusId: $statusId) {
-            id
+    mutation DocumentUpdateStatus($referenceNum: String!, $officeId: Int!, $statusId: Int!) {
+        documentUpdateStatus(referenceNum: $referenceNum, officeId: $officeId, statusId: $statusId) {
             label
         }
     }
-`)
-
-export const CREATE_COMMENT = gql(`
-    mutation CreateComment($documentId: String!, $senderId: String!, $message: String!, $files: [String!]) {
-        createComment(documentId: $documentId, senderId: $senderId, message: $message, files: $files) {
-            id
-        }
-    }
-`)
+`);
 
 export const SUBSCRIBE_DOCUMENT_EVENTS = gql(`
     subscription DocumentEvents($referenceNum: String!) {
@@ -267,7 +290,7 @@ export const SUBSCRIBE_DOCUMENT_EVENTS = gql(`
             eventName
         }
     }
-`)
+`);
 
 export const GET_DOCUMENT_STATISTICS = gql(`
     query GetDocumentStatistics($officeId: Int) {
@@ -278,16 +301,35 @@ export const GET_DOCUMENT_STATISTICS = gql(`
             referred
         }
     }
-`)
+`);
 
 export const GET_DOCUMENT_BY_ID_STATUS = gql(`
     query GetDocumentByIdStatus($referenceNum: String!) {
         getDocumentById(referenceNum: $referenceNum) {
-            status {
-                id
-                label
-                category
+            status
+            referredTo {
+                status {
+                    id
+                    label
+                    category
+                }
             }
         }
     }
-`)
+`);
+
+export const ASSIGN_OFFICERS = gql(`
+    mutation AssignOfficers($documentId: String!, $officerIds: [String!]!) {
+        assignOfficers(documentId: $documentId, officerIds: $officerIds) {
+            referenceNum
+        }
+    }
+`);
+
+export const CREATE_COMMENT = gql(`
+    mutation CreateComment($documentId: String!, $senderId: String!, $recipientId: String!, $message: String!) {
+        createComment(documentId: $documentId, senderId: $senderId, recipientId: $recipientId, message: $message) {
+            id
+        }
+    }
+`);

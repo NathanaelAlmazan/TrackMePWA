@@ -4,10 +4,10 @@ import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 
-import AccountsTable from './table';
 import { Iconify, Loader } from '../../components';
 
 const FormDialog = lazy(() => import('./form-dialog'));
+const AccountsTable = lazy(() => import('./table'));
 
 export default function AccountPage() {
     const [form, setForm] = React.useState<boolean>(false);

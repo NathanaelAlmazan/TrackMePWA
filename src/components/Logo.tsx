@@ -1,23 +1,25 @@
-import { forwardRef } from 'react';
+import { forwardRef } from "react";
 
-import Box from '@mui/material/Box';
-import Link from '@mui/material/Link';
+import Box from "@mui/material/Box";
+import Link from "@mui/material/Link";
 
-import RouterLink from './RouterLink';
+import RouterLink from "./RouterLink";
 
 // ----------------------------------------------------------------------
 
-const Logo = forwardRef<HTMLDivElement, { disabledLink?: boolean, sx?: object }>(({ disabledLink = false, sx, ...other }, ref) => {
-
+const Logo = forwardRef<
+  HTMLDivElement,
+  { disabledLink?: boolean; sx?: object }
+>(({ disabledLink = false, sx, ...other }, ref) => {
   const logo = (
     <Box
       ref={ref}
       component="img"
-      src='/logo512.png'
+      src="/logo512.png"
       sx={{
         width: 40,
         height: 40,
-        display: 'inline-flex',
+        display: "inline-flex",
         ...sx,
       }}
       {...other}
@@ -29,7 +31,7 @@ const Logo = forwardRef<HTMLDivElement, { disabledLink?: boolean, sx?: object }>
   }
 
   return (
-    <Link component={RouterLink} href="/" sx={{ display: 'contents' }}>
+    <Link component={RouterLink} href="/" sx={{ display: "contents" }}>
       {logo}
     </Link>
   );

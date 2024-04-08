@@ -117,8 +117,8 @@ export const SUBSCRIBE_OFFICE_EVENTS = gql(`
 `)
 
 export const GET_OFFICERS = gql(`
-    query GetOfficers {
-        getOfficers {
+    query GetOfficers($officeId: Int) {
+        getOfficers(officeId: $officeId) {
             uuid
             avatar
             firstName
@@ -179,8 +179,8 @@ export const GET_OFFICER_BY_ID = gql(`
 `)
 
 export const CREATE_OFFICER = gql(`
-    mutation CreateOfficer($firstName: String!, $lastName: String!, $positionId: Int!, $officeId: Int!, $password: String!) {
-        createOfficer(firstName: $firstName, lastName: $lastName, positionId: $positionId, officeId: $officeId, password: $password) {
+    mutation CreateOfficer($firstName: String!, $lastName: String!, $positionId: Int!, $officeId: Int!, $password: String, $email: String, $phone: String) {
+        createOfficer(firstName: $firstName, lastName: $lastName, positionId: $positionId, officeId: $officeId, password: $password, email: $email, phone: $phone) {
             uuid
         }
     }
@@ -211,22 +211,22 @@ export const ACTIVATE_OFFICER = gql(`
 `)
 
 export const LOGIN_OFFICER = gql(`
-    query LoginOfficer($firstName: String!, $lastName: String!, $password: String!) {
-        loginOfficer(firstName: $firstName, lastName: $lastName, password: $password) {
-            uuid
-            avatar
-            lastName
-            firstName
-            office {
-                id
-                name
-            }
-            position {
-                id
-                label
-                role
-            }
-            active
+    query LoginOfficer($username: String!, $password: String!) {
+    loginOfficer(username: $username, password: $password) {
+        uuid
+        avatar
+        lastName
+        firstName
+        office {
+            id
+            name
+        }
+        position {
+            id
+            label
+            role
+        }
+        active
             verified
             signature
         }
@@ -243,20 +243,30 @@ export const CONFIRM_RESET_PASSWORD = gql(`
     query ConfirmResetPassword($code: String!, $password: String!, $email: String, $phone: String) {
         confirmResetPassword(code: $code, password: $password, email: $email, phone: $phone) {
             uuid
+            position {
+                id
+                label
+                role
+            }
         }
     }
 `)
 
 export const REQUEST_VERIFY_ACCOUNT = gql(`
-    query RequestAccountVerify($uuid: String!, $email: String, $phone: String) {
-        requestAccountVerify(uuid: $uuid, email: $email, phone: $phone)
+    query RequestAccountVerify($uuid: String!, $contact: String!) {
+        requestAccountVerify(uuid: $uuid, contact: $contact)
     }
 `)
 
 export const CONFIRM_VERIFY_ACCOUNT = gql(`
-    query ConfirmAccountVerify($code: String!, $email: String, $phone: String) {
-        confirmAccountVerify(code: $code, email: $email, phone: $phone) {
+    query ConfirmAccountVerify($code: String!, $contact: String!) {
+        confirmAccountVerify(code: $code, contact: $contact) {
             uuid
+            position {
+                id
+                label
+                role
+            }
         }
     }
 `)

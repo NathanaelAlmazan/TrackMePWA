@@ -6,11 +6,8 @@ import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
-import Divider from '@mui/material/Divider';
-import Chip from '@mui/material/Chip';
 import Typography from '@mui/material/Typography';
 import { alpha, useTheme } from '@mui/material/styles';
-import InputAdornment from '@mui/material/InputAdornment';
 
 import { useAppSelector, useRouter } from '../../hooks';
 
@@ -24,14 +21,12 @@ import { Role } from '../../__generated__/graphql';
 
 // ----------------------------------------------------------------------
 interface AccountVerify {
-    email: string;
-    phone: string;
+    username: string;
     code: string;
 }
 
 const formDefaults = {
-    email: '',
-    phone: '',
+    username: '',
     code: ''
 }
 
@@ -46,7 +41,7 @@ export default function AccountVerifyView() {
   const [confirm, setConfirm] = useState<boolean>(false);
   const [formData, setFormData] = useState<AccountVerify>(formDefaults);
 
-  const { email, phone, code } = formData;
+  const { username, code } = formData;
 
   const [requestVerify, { error: requestError }] = useLazyQuery(REQUEST_VERIFY_ACCOUNT);
   const [confirmVerify, { error: confirmError }] = useLazyQuery(CONFIRM_VERIFY_ACCOUNT);
@@ -63,12 +58,15 @@ export default function AccountVerifyView() {
       return
     }
 
-    if (!email && !phone) {
+    if (!username) {
       setError("Please type your email or phone number.");
       return
     }
 
-    requestVerify({ variables: { uuid, email, phone } })
+    requestVerify({ variables: {
+      uuid: uuid,
+      contact: username,
+    }})
      .then(({ data }) => {
             if (data && data.requestAccountVerify) {
                 setConfirm(true);
@@ -83,7 +81,11 @@ export default function AccountVerifyView() {
   const handleSubmitPassword = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    confirmVerify({ variables: { email, phone, code } })
+    confirmVerify({ variables: {
+        code: code,
+        contact: username,
+      }
+  })
     .then(({ data }) => {
            if (data && data.confirmAccountVerify) {
                if (signed && role) {
@@ -131,28 +133,12 @@ export default function AccountVerifyView() {
                 <form onSubmit={handleSubmitRequest}>
                     <Stack spacing={2} sx={{ my: 3 }}>
                         <TextField 
-                            name="email" 
-                            label="Email" 
-                            type='email'
-                            value={email} 
+                            name="username" 
+                            label="Email or Phone Number (+63)" 
+                            value={username} 
                             onChange={handleChange}
                             fullWidth
-                        />
-
-                        <Divider>
-                            <Chip label="OR" size="medium" />
-                        </Divider>
-
-                        <TextField 
-                            name="phone" 
-                            label="Phone" 
-                            value={phone} 
-                            onChange={handleChange}
-                            inputProps={{ minLength: 10, maxLength: 10 }}
-                            InputProps={{
-                              startAdornment: <InputAdornment position="start">+63</InputAdornment>,
-                            }}
-                            fullWidth
+                            required
                         />
                     </Stack>
 

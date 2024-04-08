@@ -67,8 +67,8 @@ export default function StatusSettingsCard() {
                 categories={[
                     { label: "Finished", value: "FINISHED" },
                     { label: "Not Actionable", value: "NOT_ACTIONABLE" },
-                    { label: "Not Started", value: "NOT_STARTED" },
-                    { label: "On Going", value: "ONGOING" },
+                    { label: "Referred", value: "REFERRED" },
+                    { label: "Submitted", value: "SUBMITTED" }
                 ]}
                 onCreate={handleCreateStatus}
                 onUpdate={handleUpdateStatus}

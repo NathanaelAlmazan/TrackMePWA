@@ -1,169 +1,206 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from "react";
 
-import TextField from '@mui/material/TextField';
-import Stack from '@mui/material/Stack';
-import Box from '@mui/material/Box';
-import IconButton from '@mui/material/IconButton';
-import Tooltip from '@mui/material/Tooltip';
-import InputAdornment from '@mui/material/InputAdornment';
-import Chip from '@mui/material/Chip';
-import { useTheme } from '@mui/material/styles';
+import TextField from "@mui/material/TextField";
+import Stack from "@mui/material/Stack";
+import Box from "@mui/material/Box";
+import MenuItem from "@mui/material/MenuItem";
+import Button from "@mui/material/Button";
+import JoditEditor, { Jodit } from "jodit-react";
 
-import axios from 'axios';
-
-import { useMutation } from '@apollo/client';
-import { Iconify, Snackbar } from '../../../components';
-import { CREATE_COMMENT } from '../../../graphql/documents';
-
-import { useAppSelector } from '../../../hooks';
+import { Snackbar, Iconify } from "../../../components";
+import { Officers } from "../../../__generated__/graphql";
+import { useMutation } from "@apollo/client";
+import { CREATE_COMMENT } from "../../../graphql/documents";
 
 export type Uploads = {
-    fileUrl: string;
-    fileName: string;
-    fileType: string;
+  fileUrl: string;
+  filePath: string;
+  fileName: string;
+  fileType: string;
+};
+
+type MediaFiles = {
+  files: Uploads[];
+};
+
+interface EditorProps {
+  officerId?: string;
+  documentId: string;
+  message?: string;
+  recipients?: Officers[];
+  onComment: () => void;
 }
 
-function convertFileListToArray(fileList: FileList): File[] {
-    const filesArray: File[] = [];
-    
-    // Convert FileList to array
-    for (let i = 0; i < fileList.length; i++) {
-      const file = fileList.item(i);
-      if (file) {
-        filesArray.push(file);
-      }
+const config = {
+  readonly: false, // all options from https://xdsoft.net/jodit/doc/
+  toolbar: true,
+  minHeight: 250,
+  maxHeight: 250,
+  buttons: [
+    "source",
+    "|",
+    "bold",
+    "strikethrough",
+    "underline",
+    "italic",
+    "|",
+    "ul",
+    "ol",
+    "|",
+    "outdent",
+    "indent",
+    "|",
+    "font",
+    "fontsize",
+    "paragraph",
+    "|",
+    "image",
+    "table",
+    "link",
+    "|",
+    "align",
+    "undo",
+    "redo",
+    "selectall",
+    "cut",
+    "copy",
+    "|",
+    "hr",
+    "|",
+    "print",
+    "symbol",
+    "about",
+  ],
+  uploader: {
+    url: process.env.REACT_APP_UPLOAD_URL as string,
+    imagesExtensions: ["jpg", "png", "jpeg", "gif"],
+    withCredentials: false,
+    format: "json",
+    method: "POST",
+    prepareData: function (formData: any) {
+      const files = Array.from(formData.values()).filter(
+        (obj) => obj instanceof File
+      );
+
+      // reset form data
+      Array.from(formData.keys()).forEach((key) => {
+        formData.delete(key);
+      });
+
+      // add files
+      files.forEach((file) => {
+        formData.append("files", file);
+      });
+
+      return formData;
+    },
+    isSuccess: function (resp: MediaFiles) {
+      return resp.files.length > 0;
+    },
+    process: function (resp: MediaFiles) {
+      return {
+        files: resp.files.map((file) => file.filePath),
+        path: "/",
+        baseurl: process.env.REACT_APP_MEDIA_URL as string,
+        error: 0,
+        msg: "",
+      };
+    },
+    error: function (error: Error) {
+      console.log("Failed to upload files.");
+    },
+  },
+  style: {
+    "& .jodit .jodit-status-bar": {
+      background: "#29572E",
+      color: "rgba(255,255,255,0.5)",
+    },
+  },
+};
+
+export default function CommentField(props: EditorProps) {
+  const editor = useRef<Jodit>(null);
+  const [content, setContent] = useState<string>("");
+  const [formError, setFormError] = useState<string>();
+  const [recipientId, setRecipientId] = useState<string>("");
+
+  const [createComment, { error }] = useMutation(CREATE_COMMENT);
+
+  useEffect(() => {
+    if (props.message) setContent(props.message);
+  }, [props.message]);
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!props.officerId) {
+      setFormError("Not logged in.");
+      return;
     }
-  
-    return filesArray;
-}
 
-export default function CommentField({ referenceNum, onComment }: { referenceNum: string, onComment: () => void }) {
-    const theme = useTheme();
-    const { uuid } = useAppSelector((state) => state.auth);
+    // create comment
+    await createComment({
+      variables: {
+        documentId: props.documentId,
+        message: content,
+        recipientId: recipientId,
+        senderId: props.officerId,
+      },
+    });
 
-    const [message, setMessage] = useState<string>("");
-    const [files, setFiles] = useState<File[]>([]);
-    const [formError, setFormError] = useState<string>();
+    props.onComment(); // reload
+    setRecipientId("");
+    setContent(""); // reset message
+  };
 
-    const [createComment, { error: createError }] = useMutation(CREATE_COMMENT);
+  return (
+    <>
+      <Box component="form" onSubmit={handleSubmit}>
+        <Stack spacing={2}>
+          {props.recipients && (
+            <TextField
+              name="recipientId"
+              select
+              label="Recipient"
+              value={recipientId}
+              onChange={(event) => setRecipientId(event.target.value)}
+              required
+              fullWidth
+            >
+              {props.recipients.map((option) => (
+                <MenuItem key={option.uuid} value={option.uuid}>
+                  {option.firstName + " " + option.lastName}
+                </MenuItem>
+              ))}
+            </TextField>
+          )}
 
+          <JoditEditor
+            ref={editor}
+            value={content}
+            config={config}
+            onChange={(value) => setContent(value)}
+          />
 
-    const handleFilesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const fileList = event.target.files;
-        if (fileList) {
-
-            setFiles(previous => previous.concat(convertFileListToArray(fileList)));
-        }
-    }
-
-    const handleDelete = (fileName: string) => {
-        setFiles(previous => previous.filter(file => file.name !== fileName));
-    }
-
-    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-
-        if (!uuid) {
-            setFormError("Not logged in.");
-            return
-        }
-
-        // upload files
-        let uploaded: Uploads[] = [];
-        if (files.length > 0) {
-            try {
-                const form = new FormData();
-                files.forEach((file) => {
-                    form.append("files", file);
-                });
-
-                const result = await axios.post(process.env.REACT_APP_MEDIA_URL as string, form);
-                uploaded = result.data.files;
-            } catch (err) {
-                setFormError("Failed to upload files.");
-                return
-            }
-        }
-
-        // create comment
-        await createComment({
-            variables:{
-                documentId: referenceNum,
-                senderId: uuid,
-                message: message,
-                files: uploaded.map(file => file.fileUrl)
-            }
-        });
-
-        onComment(); // reload
-        setMessage(""); // reset message
-        setFiles([]); // reset files
-    }
-
-    return (
-        <>
-        <Box 
-            component='form'
-            onSubmit={handleSubmit}
-            sx={{ 
-                position: 'absolute', 
-                backgroundColor: theme.palette.background.paper,
-                bottom: 0, 
-                left: 0, 
-                right: 0, 
-                px: 3,
-                pt: 1 
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "flex-end",
             }}
-        >
-            <Stack spacing={2}>
-                <Box sx={{ maxWidth: '100%', overflow: 'auto', display: 'flex', flexDirection: 'row' }}>
-                    {files.map(file => (
-                        <Chip key={file.name} label={file.name} variant="outlined" onDelete={() => handleDelete(file.name)} sx={{ mx: '5px' }} />
-                    ))}
-                </Box>
+          >
+            <Button
+              type="submit"
+              variant="contained"
+              endIcon={<Iconify icon="ic:baseline-send" />}
+            >
+              Send
+            </Button>
+          </Box>
+        </Stack>
+      </Box>
 
-                <TextField 
-                    variant='outlined'
-                    placeholder='Comment...' 
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    required
-                    fullWidth 
-                    InputProps={{
-                        endAdornment: 
-                            <InputAdornment position="end">
-                                <Stack direction='row'>
-                                    <Tooltip title='Insert File'>
-                                        <IconButton component='label'>
-                                            <Iconify icon='material-symbols:attach-file-add-rounded' />
-
-                                            <input 
-                                                type='file' 
-                                                multiple
-                                                hidden 
-                                                style={{ display: 'none' }}
-                                                onChange={handleFilesChange}
-                                            />
-                                        </IconButton>
-                                    </Tooltip>
-                                    
-                                    <Tooltip title='Send'>
-                                        <IconButton type='submit'>
-                                            <Iconify icon='ic:baseline-send' />
-                                        </IconButton>
-                                    </Tooltip>
-                                </Stack>
-                            </InputAdornment>,
-                    }}
-                />
-            </Stack>
-        </Box>
-
-        <Snackbar 
-            severity='error' 
-            message={createError?.message || formError} 
-        />
-
-        </>
-    );
+      <Snackbar severity="error" message={formError || error?.message} />
+    </>
+  );
 }

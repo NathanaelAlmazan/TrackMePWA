@@ -9,20 +9,15 @@ import IconButton from '@mui/material/IconButton';
 
 import { DocumentRow } from '.';
 import { Label, Iconify, DeleteDialog } from '../../../components';
+import { capitalCase } from 'change-case';
 
 // ----------------------------------------------------------------------
 
 function statusColor(status: string) {
-  switch (status) {
-    case 'Ongoing':
-      return 'warning';
-    case 'Finished':
-      return'success';
-    case 'Not Started':
-      return 'error';
-    default:
-      return 'info';
-  }
+  const category = status.toLowerCase();
+  if (category.includes("ongoing") || category.includes("referred")) return "warning";
+  else if (category.includes("finished")) return "success";
+  else return "info";
 }
 
 export default function DocumentTableRow({
@@ -93,11 +88,11 @@ export default function DocumentTableRow({
         </TableCell>
 
         <TableCell align="right" sx={{ maxWidth: 200 }}>
-          {document.refferedTo}
+          {document.referredTo}
         </TableCell>
 
         <TableCell align="right" sx={{ width: 50 }}>
-          <Label color={statusColor(document.status.split('_')[0])}>{document.status.split('_')[1]}</Label>
+          <Label color={statusColor(document.status)}>{capitalCase(document.status)}</Label>
         </TableCell>
 
         <TableCell align="right" sx={{ width: 30 }}>

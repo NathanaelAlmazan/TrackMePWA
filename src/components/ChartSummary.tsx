@@ -1,18 +1,28 @@
-import PropTypes from 'prop-types';
+import PropTypes from "prop-types";
 
-import { ReactNode } from 'react';
+import { ReactNode } from "react";
 
-import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
+import Box from "@mui/material/Box";
+import Card from "@mui/material/Card";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
 
 // ----------------------------------------------------------------------
 
-export default function AppWidgetSummary(
-    { title, total, icon, color = 'primary', sx, ...other }:
-    { title: string, total: number, icon: ReactNode, color?: string, sx?: object }
-) {
+export default function AppWidgetSummary({
+  title,
+  total,
+  icon,
+  color = "primary",
+  sx,
+  ...other
+}: {
+  title: string;
+  total: number;
+  icon: ReactNode;
+  color?: string;
+  sx?: object;
+}) {
   return (
     <Card
       component={Stack}
@@ -31,7 +41,7 @@ export default function AppWidgetSummary(
       <Stack spacing={0.5}>
         <Typography variant="h4">{total}</Typography>
 
-        <Typography variant="subtitle2" sx={{ color: 'text.disabled' }}>
+        <Typography variant="subtitle2" sx={{ color: "text.disabled" }}>
           {title}
         </Typography>
       </Stack>
@@ -40,9 +50,9 @@ export default function AppWidgetSummary(
 }
 
 AppWidgetSummary.propTypes = {
-    color: PropTypes.string,
-    icon: PropTypes.oneOfType([PropTypes.element, PropTypes.string]),
-    sx: PropTypes.object,
-    title: PropTypes.string,
-    total: PropTypes.number,
+  color: PropTypes.string,
+  icon: PropTypes.oneOfType([PropTypes.element, PropTypes.string]),
+  sx: PropTypes.object,
+  title: PropTypes.string,
+  total: PropTypes.number,
 };

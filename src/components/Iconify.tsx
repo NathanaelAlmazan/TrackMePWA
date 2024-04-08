@@ -1,11 +1,14 @@
-import { forwardRef } from 'react';
-import { Icon } from '@iconify/react';
+import { forwardRef } from "react";
+import { Icon } from "@iconify/react";
 
-import Box from '@mui/material/Box';
+import Box from "@mui/material/Box";
 
 // ----------------------------------------------------------------------
 
-const Iconify = forwardRef<HTMLDivElement, { icon: string, width?: number, sx?: object }>(({ icon, width = 20, sx, ...other }, ref) => (
+const Iconify = forwardRef<
+  HTMLDivElement,
+  { icon: string; width?: number; sx?: object }
+>(({ icon, width = 20, sx, ...other }, ref) => (
   <Box
     ref={ref}
     component={Icon}

@@ -1,5 +1,11 @@
 import { gql } from '../../__generated__/gql';
 
+export const GENERATE_REPORT = gql(`
+    query GenerateReport {
+        generateReport
+    }
+`)
+
 // =============================== REPORTS ==================================
 
 export const GET_REPORTS = gql(`
