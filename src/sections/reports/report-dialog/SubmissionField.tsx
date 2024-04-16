@@ -79,7 +79,7 @@ export default function SubmissionField(
                     form.append("files", file);
                 });
 
-                const result = await axios.post(process.env.REACT_APP_MEDIA_URL as string, form);
+                const result = await axios.post(process.env.REACT_APP_UPLOAD_URL as string, form);
                 uploadedFiles = result.data.files;
             } catch (err) {
                 setFormError("Failed to upload files.");

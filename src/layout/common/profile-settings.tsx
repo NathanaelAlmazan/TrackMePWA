@@ -127,7 +127,7 @@ export default function ProfileDialog({
                 const form = new FormData();
                 form.append("files", file);
 
-                const result = await axios.post(process.env.REACT_APP_MEDIA_URL as string, form);
+                const result = await axios.post(process.env.REACT_APP_UPLOAD_URL as string, form);
                 const uploaded: Uploads[] = result.data.files;
 
                 setAvatars(previous => [ ...previous, {
@@ -155,7 +155,7 @@ export default function ProfileDialog({
                         const form = new FormData();
                         form.append("files", blob, `${lastName}_signature.png`);
     
-                        axios.post(process.env.REACT_APP_MEDIA_URL as string, form)
+                        axios.post(process.env.REACT_APP_UPLOAD_URL as string, form)
                             .then(({ data }) => {
                                 const uploaded: Uploads[] = data.files;
                                 const fileUrl = uploaded[0].fileUrl;
@@ -182,7 +182,7 @@ export default function ProfileDialog({
                 const form = new FormData();
                 form.append("files", file);
 
-                const result = await axios.post(process.env.REACT_APP_MEDIA_URL as string, form);
+                const result = await axios.post(process.env.REACT_APP_UPLOAD_URL as string, form);
                 const uploaded: Uploads[] = result.data.files;
 
                 setFormData({...formData, signature: uploaded[0].fileUrl });

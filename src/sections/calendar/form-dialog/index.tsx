@@ -139,7 +139,7 @@ export default function FormDialog({
                 const form = new FormData();
                 form.append("files", image);
 
-                const response = await axios.post(process.env.REACT_APP_MEDIA_URL as string, form);
+                const response = await axios.post(process.env.REACT_APP_UPLOAD_URL as string, form);
                 
                 if (response.data) {
                     const uploaded: Uploads[] = response.data.files;
