@@ -3,8 +3,10 @@ import { Theme, useTheme } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import OutlinedInput from "@mui/material/OutlinedInput";
 import InputLabel from "@mui/material/InputLabel";
+import Typography from "@mui/material/Typography";
 import MenuItem from "@mui/material/MenuItem";
 import FormControl from "@mui/material/FormControl";
+import FormHelperText from "@mui/material/FormHelperText";
 import Select, { SelectChangeEvent } from "@mui/material/Select";
 import Chip from "@mui/material/Chip";
 
@@ -32,12 +34,15 @@ interface SelectProps {
   name: string;
   label: string;
   selected: readonly any[];
-  options: { id: any; label: string }[];
+  options: { id: any; label: string; description?: string }[];
+  helperText?: string;
+  required: boolean;
   onChange: (selected: any[]) => void;
 }
 
 export default function MultipleSelectChip(props: SelectProps) {
-  const { name, label, selected, options, onChange } = props;
+  const { name, label, selected, options, helperText, required, onChange } =
+    props;
 
   const theme = useTheme();
 
@@ -57,7 +62,7 @@ export default function MultipleSelectChip(props: SelectProps) {
           multiple
           value={selected}
           onChange={handleChange}
-          required
+          required={required}
           input={<OutlinedInput label={label} />}
           renderValue={(selected) => (
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
@@ -77,10 +82,23 @@ export default function MultipleSelectChip(props: SelectProps) {
               value={option.id}
               style={getStyles(option.id, selected, theme)}
             >
-              {option.label}
+              <Typography component="div" variant="body1">
+                {option.label}
+
+                {option.description && (
+                  <Typography
+                    component="p"
+                    variant="caption"
+                    color="textSecondary"
+                  >
+                    {option.description}
+                  </Typography>
+                )}
+              </Typography>
             </MenuItem>
           ))}
         </Select>
+        {helperText && <FormHelperText>{helperText}</FormHelperText>}
       </FormControl>
     </div>
   );

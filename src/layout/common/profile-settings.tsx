@@ -87,8 +87,10 @@ export default function ProfileDialog({
     const signaturePad = useRef<SignatureCanvas | null>(null);
 
     const { firstName, lastName, email, phone, avatar, signature, password } = formData;
-  
-    const [getOfficerById, { error: officerError }] = useLazyQuery(GET_OFFICER_BY_ID);
+
+    const [getOfficerById, { error: officerError }] = useLazyQuery(GET_OFFICER_BY_ID, {
+        fetchPolicy: 'no-cache'
+    });
 
     const [updateOfficer, { error: updateError }] = useMutation(UPDATE_OFFICER);
 
@@ -110,11 +112,11 @@ export default function ProfileDialog({
                 });
         }
     }, [uuid, getOfficerById]);
-  
+
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({...formData, [event.target.name]: event.target.value });
     };
-  
+
     const handleAvatarChange = (event: React.MouseEvent<unknown>, src: string) => {
         setFormData({...formData, avatar: src });
     };
@@ -353,13 +355,13 @@ export default function ProfileDialog({
                                                             <input type="file" accept="image/*" onChange={handleUploadSignature} hidden style={{ display: 'none' }} />
                                                         </IconButton>
                                                     </Tooltip>
-                                                   {edit && (
+                                                    {edit && (
                                                         <Tooltip title='Cancel'>
                                                             <IconButton onClick={handleEditSignature}>
                                                                 <Iconify icon='iconoir:cancel' />
                                                             </IconButton>
                                                         </Tooltip>
-                                                   )}
+                                                    )}
                                                 </Stack>
                                             </>
                                             

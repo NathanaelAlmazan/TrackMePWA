@@ -6,10 +6,12 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 export default function DatePickerValue({
   value,
   label,
+  disable = false,
   onChange,
 }: {
   value: Dayjs | null;
   label: string;
+  disable?: boolean;
   onChange: (value: Dayjs | null) => void;
 }) {
   return (
@@ -17,6 +19,7 @@ export default function DatePickerValue({
       <DatePicker
         label={label}
         value={value}
+        disabled={disable}
         onChange={(newValue) => onChange(newValue)}
       />
     </LocalizationProvider>

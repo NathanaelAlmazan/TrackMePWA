@@ -40,14 +40,14 @@ export default function NotificationsPopover() {
 
   useEffect(() => {
     if (notifications) {
-      setDocuments(notifications.getNotifications.filter(notif => notif.subject.toLowerCase() === "assigned document").map(notif => ({
+      setDocuments(notifications.getNotifications.filter(notif => notif.subject.toLowerCase().includes("document")).map(notif => ({
         title: notif.subject,
         description: notif.description,
         createdAt: new Date(notif.timestamp),
         type: "documents"
       })));
 
-      setReports(notifications.getNotifications.filter(notif => notif.subject.toLowerCase() === "due report").map(notif => ({
+      setReports(notifications.getNotifications.filter(notif => notif.subject.toLowerCase().includes("report")).map(notif => ({
         title: notif.subject,
         description: notif.description,
         createdAt: new Date(notif.timestamp),
@@ -234,13 +234,13 @@ function renderContent(notification: Notification) {
     </Typography>
   );
 
-  if (notification.title.toLowerCase() === 'assigned document') {
+  if (notification.title.toLowerCase().includes('document')) {
     return {
       avatar: <Iconify icon='ant-design:form-outlined' sx={{ width: 40, height: 40 }} />,
       title,
     };
   }
-  if (notification.title.toLowerCase() === 'due report') {
+  if (notification.title.toLowerCase().includes('report')) {
     return {
       avatar: <Iconify icon='mdi:report-multiple' sx={{ width: 40, height: 40 }} />,
       title,

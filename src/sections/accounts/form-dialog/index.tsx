@@ -30,7 +30,9 @@ interface OfficerInput {
 
 function filterPositions(office: string, positions: Positions[]) {
   if (office.includes("Regional Director")) {
-    return positions.filter((pos) => pos.role === Role.Director);
+    return positions.filter(
+      (pos) => pos.role === Role.Director || pos.role === Role.Officer
+    );
   } else if (office.includes("Division")) {
     return positions.filter(
       (pos) =>

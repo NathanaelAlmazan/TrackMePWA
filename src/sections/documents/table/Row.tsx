@@ -1,21 +1,22 @@
-import { useState } from 'react';
+import { useState } from "react";
 
-import Popover from '@mui/material/Popover';
-import TableRow from '@mui/material/TableRow';
-import MenuItem from '@mui/material/MenuItem';
-import TableCell from '@mui/material/TableCell';
-import Typography from '@mui/material/Typography';
-import IconButton from '@mui/material/IconButton';
+import Popover from "@mui/material/Popover";
+import TableRow from "@mui/material/TableRow";
+import MenuItem from "@mui/material/MenuItem";
+import TableCell from "@mui/material/TableCell";
+import Typography from "@mui/material/Typography";
+import IconButton from "@mui/material/IconButton";
 
-import { DocumentRow } from '.';
-import { Label, Iconify, DeleteDialog } from '../../../components';
-import { capitalCase } from 'change-case';
+import { DocumentRow } from ".";
+import { Label, Iconify, DeleteDialog } from "../../../components";
+import { capitalCase } from "change-case";
 
 // ----------------------------------------------------------------------
 
 function statusColor(status: string) {
   const category = status.toLowerCase();
-  if (category.includes("ongoing") || category.includes("referred")) return "warning";
+  if (category.includes("ongoing") || category.includes("referred"))
+    return "warning";
   else if (category.includes("finished")) return "success";
   else return "info";
 }
@@ -25,13 +26,13 @@ export default function DocumentTableRow({
   document,
   onView,
   onEdit,
-  onDelete
+  onDelete,
 }: {
-  officeId?: number,
-  document: DocumentRow,
-  onView: (event: React.MouseEvent<unknown>, id: string) => void,
-  onEdit: (event: React.MouseEvent<unknown>, id: string) => void,
-  onDelete: (event: React.MouseEvent<unknown>, id: string) => void
+  officeId?: number;
+  document: DocumentRow;
+  onView: (event: React.MouseEvent<unknown>, id: string) => void;
+  onEdit: (event: React.MouseEvent<unknown>, id: string) => void;
+  onDelete: (event: React.MouseEvent<unknown>, id: string) => void;
 }) {
   const [open, setOpen] = useState<HTMLButtonElement | null>(null);
   const [dialog, setDialog] = useState<boolean>(false);
@@ -63,7 +64,6 @@ export default function DocumentTableRow({
   return (
     <>
       <TableRow hover tabIndex={-1} role="checkbox">
-
         <TableCell component="th" scope="row">
           <Typography variant="subtitle2" noWrap>
             {`#${document.referenceNum}`}
@@ -72,27 +72,27 @@ export default function DocumentTableRow({
 
         <TableCell sx={{ minWidth: 250 }}>
           <Typography variant="body2">
-            {document.subject}
+            {document.subject.length > 255
+              ? `${document.subject.slice(0, 255)}...`
+              : document.subject}
           </Typography>
-          {document.tag && (
-            <Label color="info">{document.tag}</Label>
-          )}
+          {document.tag && <Label color="info">{document.tag}</Label>}
         </TableCell>
 
         <TableCell align="right" sx={{ minWidth: 150 }}>
           {document.dateCreated}
         </TableCell>
 
-        <TableCell align="right">
-          {document.receivedFrom}
-        </TableCell>
+        <TableCell align="right">{document.receivedFrom}</TableCell>
 
         <TableCell align="right" sx={{ maxWidth: 200 }}>
           {document.referredTo}
         </TableCell>
 
         <TableCell align="right" sx={{ width: 50 }}>
-          <Label color={statusColor(document.status)}>{capitalCase(document.status)}</Label>
+          <Label color={statusColor(document.status)}>
+            {capitalCase(document.status)}
+          </Label>
         </TableCell>
 
         <TableCell align="right" sx={{ width: 30 }}>
@@ -106,8 +106,8 @@ export default function DocumentTableRow({
         open={!!open}
         anchorEl={open}
         onClose={handleCloseMenu}
-        anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
-        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        anchorOrigin={{ vertical: "top", horizontal: "left" }}
+        transformOrigin={{ vertical: "top", horizontal: "right" }}
         PaperProps={{
           sx: { width: 140 },
         }}
@@ -125,14 +125,17 @@ export default function DocumentTableRow({
         )}
 
         {officeId === undefined && (
-          <MenuItem onClick={() => setDialog(true)} sx={{ color: 'error.main' }}>
+          <MenuItem
+            onClick={() => setDialog(true)}
+            sx={{ color: "error.main" }}
+          >
             <Iconify icon="eva:trash-2-outline" sx={{ mr: 2 }} />
             Delete
           </MenuItem>
         )}
       </Popover>
 
-      <DeleteDialog 
+      <DeleteDialog
         open={dialog}
         onClose={() => setDialog(false)}
         onDelete={handleDeleteDocument}

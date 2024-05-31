@@ -127,15 +127,24 @@ export default function DocumentTable({
           referenceNum: doc.referenceNum,
           subject: doc.subject,
           receivedFrom: doc.receivedFrom,
-          referredTo: formatReferrals(
-            doc.referredTo.map((ref) => ref.office.name)
-          ),
+          referredTo:
+            doc.directorAssigned.length > 0
+              ? doc.directorAssigned
+                  .map((officer) => `${officer.firstName} ${officer.lastName}`)
+                  .join(", ")
+              : formatReferrals(doc.referredTo.map((ref) => ref.office.name)),
           dateCreated: new Date(doc.dateCreated).toLocaleDateString(undefined, {
             month: "short",
             day: "numeric",
-            year: "numeric"
+            year: "numeric",
           }),
-          status: officeId ? `${doc.referredTo.find(ref => parseInt(ref.office.id) === officeId)?.status.category || "REFERRED"}` : doc.status,
+          status: officeId
+            ? `${
+                doc.referredTo.find(
+                  (ref) => parseInt(ref.office.id) === officeId
+                )?.status.category || "REFERRED"
+              }`
+            : doc.status,
           tag: doc.tag ? capitalCase(doc.tag) : "",
         }))
       );
@@ -310,7 +319,7 @@ export default function DocumentTable({
             {
               name: "Status",
               options: Array.from(
-                new Set(documentList.map((doc) => doc.status))
+                new Set(documentList.map((doc) => doc.status.replace(/\d+/g, "")))
               ).map((status) => ({
                 value: status,
                 label: capitalCase(status.replace(/\d+/g, "")),

@@ -117,7 +117,7 @@ export const SUBSCRIBE_OFFICE_EVENTS = gql(`
 `)
 
 export const GET_OFFICERS = gql(`
-    query GetOfficers($officeId: Int) {
+    query GetOfficers($officeId: [Int!]) {
         getOfficers(officeId: $officeId) {
             uuid
             avatar

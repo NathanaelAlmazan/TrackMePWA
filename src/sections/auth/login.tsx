@@ -81,7 +81,6 @@ export default function LoginView() {
           if (data && data.requestAccountVerify) {
             setVerification(true);
             setError(undefined);
-            console.log(data.requestAccountVerify);
           }
         })
         .catch((error) => {
@@ -134,7 +133,6 @@ export default function LoginView() {
             if (data && data.requestAccountVerify) {
               setVerification(true);
               setError(undefined);
-              console.log(data.requestAccountVerify);
             }
           })
           .catch((error) => {

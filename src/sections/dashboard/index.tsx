@@ -72,7 +72,7 @@ export default function DashboardPage() {
           data: documents.getDocumentSummary.map((stat) => stat.closed),
         },
         {
-          name: "No Action",
+          name: "Not Actionable",
           data: documents.getDocumentSummary.map((stat) => stat.noaction),
         },
       ]);

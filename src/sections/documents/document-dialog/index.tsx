@@ -43,6 +43,17 @@ function statusColor(status: Status) {
   }
 }
 
+export function formatReferrals(office?: string): string {
+  if (!office) return "";
+  return office
+    .split(" ")
+    .map((word) => {
+      if (isNaN(parseInt(word))) return word.charAt(0).toUpperCase();
+      else return `-${parseInt(word).toString()}`;
+    })
+    .join("");
+}
+
 export default function DocumentDialog({
   officerId,
   officeId,
@@ -123,8 +134,6 @@ export default function DocumentDialog({
                   </Typography>
                 </Box>
 
-                <Divider>Messages</Divider>
-
                 <Stack
                   spacing={2}
                   sx={{
@@ -159,7 +168,7 @@ export default function DocumentDialog({
                     )}
                 </Stack>
 
-                <Divider>Compose</Divider>
+                <Divider />
 
                 {referenceNum && (
                   <CommentField
@@ -198,7 +207,8 @@ export default function DocumentDialog({
                       )}
 
                     {document &&
-                      [Role.Superuser, Role.Director].includes(role) && (
+                      [Role.Superuser, Role.Director].includes(role) &&
+                      (document.getDocumentById.referredTo.length > 1 ? (
                         <>
                           <Button
                             onClick={handleOpenStatus}
@@ -265,25 +275,35 @@ export default function DocumentDialog({
                             </List>
                           </Popover>
                         </>
-                      )}
+                      ) : (
+                        document.getDocumentById.referredTo.map((ref) => (
+                          <StatusButton
+                            admin
+                            role={role}
+                            status={ref.status.category}
+                            officeId={parseInt(ref.office.id)}
+                            referenceNum={document.getDocumentById.referenceNum}
+                            onUpdate={() => refetch()}
+                          />
+                        ))
+                      ))}
 
                     <PDFDownloadLink
                       document={<ReferenceSlip document={document} />}
                       fileName={`${referenceNum}.pdf`}
                     >
-                      {({ url }) =>
-                        url && (
-                          <Button
-                            onClick={() => window.open(url, "_blank")}
-                            variant="contained"
-                            endIcon={
-                              <Iconify icon="ant-design:export-outlined" />
-                            }
-                          >
-                            Export
-                          </Button>
-                        )
-                      }
+                      {({ url, loading }) => (
+                        <Button
+                          onClick={() => window.open(url as string, "_blank")}
+                          variant="contained"
+                          disabled={loading}
+                          endIcon={
+                            <Iconify icon="ant-design:export-outlined" />
+                          }
+                        >
+                          Export
+                        </Button>
+                      )}
                     </PDFDownloadLink>
                   </Stack>
 
@@ -301,13 +321,32 @@ export default function DocumentDialog({
                     .map((ref) => ref.office.name)
                     .join(", ")}
                   type={document?.getDocumentById.type?.label}
-                  purpose={document?.getDocumentById.purpose?.label}
+                  purpose={document?.getDocumentById.purpose
+                    ?.map((p) => p.label)
+                    .join(", ")}
                   dateCreated={document?.getDocumentById.dateCreated}
                   dateDue={document?.getDocumentById.dateDue}
                   tag={document?.getDocumentById.tag}
-                  assigned={document?.getDocumentById.assigned
-                    .filter((officer) => officer.position?.role !== Role.Chief)
-                    .map((officer) => officer.uuid)}
+                  directorAssigned={document?.getDocumentById.directorAssigned.map(
+                    (officer) => ({
+                      uuid: officer.uuid,
+                      firstName: officer.firstName,
+                      lastName: officer.lastName,
+                      position: officer.position
+                        ? formatReferrals(officer.office?.name) +
+                          " " +
+                          officer.position?.label
+                        : "",
+                    })
+                  )}
+                  chiefAssigned={document?.getDocumentById.chiefAssigned.map(
+                    (officer) => ({
+                      uuid: officer.uuid,
+                      firstName: officer.firstName,
+                      lastName: officer.lastName,
+                      position: officer.position?.label,
+                    })
+                  )}
                 />
               </Stack>
             </Grid>

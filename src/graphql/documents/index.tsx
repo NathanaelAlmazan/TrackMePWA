@@ -156,6 +156,18 @@ export const GET_DOCUMENTS = gql(`
                     category
                 }
             }
+            directorAssigned {
+                uuid
+                firstName
+                lastName
+                position {
+                    label
+                    role
+                }
+                office {
+                    name
+                }
+            }
             status
             tag
             dateCreated
@@ -207,10 +219,28 @@ export const GET_DOCUMENT_BY_ID = gql(`
                     name
                 }
             }
-            assigned(officerId: $officerId) {
+            directorAssigned {
                 uuid
+                firstName
+                lastName
                 position {
+                    label
                     role
+                }
+                office {
+                    name
+                }
+            }
+            chiefAssigned(officerId: $officerId) {
+                uuid
+                firstName
+                lastName
+                position {
+                    label
+                    role
+                }
+                office {
+                    name
                 }
             }
             comments(officerId: $officerId) {
@@ -252,16 +282,16 @@ export const GET_DOCUMENT_BY_ID = gql(`
 `);
 
 export const CREATE_DOCUMENT = gql(`
-    mutation CreateDocument($subject: String!, $description: String!, $receivedFrom: String!, $typeId: Int!, $purposeId: Int!, $dateDue: String!, $signatureId: String!, $referredTo: [ReferralInput!]!, $tag: Tags) {
-        createDocument(subject: $subject, description: $description, receivedFrom: $receivedFrom, typeId: $typeId, purposeId: $purposeId, dateDue: $dateDue, signatureId: $signatureId, referredTo: $referredTo, tag: $tag) {
+    mutation CreateDocument($subject: String!, $description: String!, $receivedFrom: String!, $typeId: Int!, $purposeIds: String!, $dateDue: String, $signatureId: String!, $referredTo: [ReferralInput!]!, $tag: Tags, $assignedTo: [String!]!) {
+        createDocument(subject: $subject, description: $description, receivedFrom: $receivedFrom, typeId: $typeId, purposeIds: $purposeIds, dateDue: $dateDue, signatureId: $signatureId, referredTo: $referredTo, tag: $tag, assignedTo: $assignedTo) {
             referenceNum
         }
     }
 `);
 
 export const UPDATE_DOCUMENT = gql(`
-    mutation UpdateDocument($referenceNum: String!, $signatureId: String!, $subject: String, $description: String, $receivedFrom: String, $typeId: Int, $purposeId: Int, $tag: Tags, $dateDue: String) {
-        updateDocument(referenceNum: $referenceNum, signatureId: $signatureId, subject: $subject, description: $description, receivedFrom: $receivedFrom, typeId: $typeId, purposeId: $purposeId, tag: $tag, dateDue: $dateDue) {
+    mutation UpdateDocument($referenceNum: String!, $signatureId: String!, $subject: String, $description: String, $receivedFrom: String, $typeId: Int, $purposeIds: String, $tag: Tags, $dateDue: String, $assignedTo: [String!]) {
+        updateDocument(referenceNum: $referenceNum, signatureId: $signatureId, subject: $subject, description: $description, receivedFrom: $receivedFrom, typeId: $typeId, purposeIds: $purposeIds, tag: $tag, dateDue: $dateDue, assignedTo: $assignedTo) {
             referenceNum
         }
     }

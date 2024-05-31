@@ -9,8 +9,10 @@ export default function SpreadsheetExport() {
 
   const exportSummary = () => {
     generate()
-      .then((data) => {
-        console.log(data);
+      .then((res) => {
+        if (res.data) {
+          window.open(res.data.generateReport, "_blank");
+        }
       })
       .catch((error) => {
         console.log(error);

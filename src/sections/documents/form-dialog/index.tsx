@@ -7,15 +7,23 @@ import Button from "@mui/material/Button";
 import Grid from "@mui/material/Grid";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
+import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import MenuItem from "@mui/material/MenuItem";
 import Avatar from "@mui/material/Avatar";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Checkbox from "@mui/material/Checkbox";
+import Autocomplete, { createFilterOptions } from "@mui/material/Autocomplete";
 
 import { useLazyQuery, useMutation, useQuery } from "@apollo/client";
 import dayjs, { Dayjs } from "dayjs";
 
 import { MultiSelect, DatePicker, Snackbar } from "../../../components";
-import { GET_OFFICES, GET_SIGNATORIES } from "../../../graphql/users";
+import {
+  GET_OFFICERS,
+  GET_OFFICES,
+  GET_SIGNATORIES,
+} from "../../../graphql/users";
 import {
   GET_PURPOSES,
   GET_STATUSES,
@@ -32,7 +40,7 @@ interface DocumentForm {
   description: string;
   receivedFrom: string;
   typeId: string;
-  purposeId: string;
+  purposeIds: string;
   statusId: string;
   signatureId: string;
   tag: string;
@@ -43,11 +51,15 @@ const formDefaults = {
   description: "",
   receivedFrom: "",
   typeId: "",
-  purposeId: "",
+  purposeIds: "",
   statusId: "",
   signatureId: "",
   tag: "",
 };
+
+export const BIN_OFFICE = 20;
+
+const filter = createFilterOptions<any>();
 
 export default function FormDialog({
   referenceNum,
@@ -86,26 +98,41 @@ export default function FormDialog({
   } = useQuery(GET_TEMP_REF_NUM, {
     fetchPolicy: "no-cache",
   });
+
   const [getDocumentById, { error: getError }] = useLazyQuery(
     GET_DOCUMENT_BY_ID,
     {
       fetchPolicy: "no-cache",
     }
   );
+  const [getOfficers, { error: officersError }] = useLazyQuery(GET_OFFICERS, {
+    fetchPolicy: "no-cache",
+  });
 
   const [createDocument, { error: createError }] = useMutation(CREATE_DOCUMENT);
   const [updateDocument, { error: updateError }] = useMutation(UPDATE_DOCUMENT);
 
   const [referrals, setReferrals] = useState<number[]>([]);
   const [deadline, setDeadline] = useState<Dayjs>(dayjs(new Date()));
+  const [disableDeadline, setDisableDeadline] = useState(false);
   const [formData, setFormData] = useState<DocumentForm>(formDefaults);
+  const [officers, setOfficers] = useState<
+    { uuid: string; firstName: string; lastName: string; position?: string }[]
+  >([]);
+  const [assigned, setAssigned] = useState<
+    {
+      id: string;
+      label: string;
+      description: string | undefined;
+    }[]
+  >([]);
 
   const {
     subject,
     description,
     receivedFrom,
     typeId,
-    purposeId,
+    purposeIds,
     statusId,
     signatureId,
     tag,
@@ -123,20 +150,31 @@ export default function FormDialog({
               typeId: data.getDocumentById.type
                 ? data.getDocumentById.type.id.toString()
                 : "",
-              purposeId: data.getDocumentById.purpose
-                ? data.getDocumentById.purpose.id.toString()
+              purposeIds: data.getDocumentById.purpose
+                ? data.getDocumentById.purpose.map((p) => p.id).join(",")
                 : "",
               tag: data.getDocumentById.tag ? data.getDocumentById.tag : "",
               signatureId: data.getDocumentById.signatory.uuid,
               statusId: "",
             });
 
-            setDeadline(dayjs(new Date(data.getDocumentById.dateDue)));
+            if (data.getDocumentById.dateDue) {
+              setDeadline(dayjs(new Date(data.getDocumentById.dateDue)));
+            }
             setReferrals(
               data.getDocumentById.referredTo.map((ref) =>
                 parseInt(ref.office.id)
               )
             );
+            setAssigned(
+              data.getDocumentById.directorAssigned.map((officer) => ({
+                id: officer.uuid,
+                label: `${officer.firstName} ${officer.lastName}`,
+                description:
+                  officer.office?.name + " / " + officer.position?.label,
+              }))
+            );
+            setDisableDeadline(data.getDocumentById.dateDue ? false : true);
           }
         }
       );
@@ -147,8 +185,45 @@ export default function FormDialog({
     }
   }, [referenceNum, officerId, getDocumentById]);
 
+  useEffect(() => {
+    if (referrals.length > 0) {
+      getOfficers({
+        variables: {
+          officeId: referrals,
+        },
+      })
+        .then(({ data }) => {
+          if (data) {
+            setOfficers(
+              data.getOfficers.map((officer) => ({
+                uuid: officer.uuid,
+                firstName: officer.firstName,
+                lastName: officer.lastName,
+                position:
+                  officer.office?.name + " / " + officer.position?.label,
+              }))
+            );
+          }
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+    }
+  }, [referrals, getOfficers]);
+
   const handleReferralsChange = (selected: number[]) => {
     setReferrals(selected);
+  };
+
+  const handleAssignedChange = (selected: any[]) => {
+    setAssigned(selected);
+  };
+
+  const handlePurposeChange = (selected: string[]) => {
+    setFormData({
+      ...formData,
+      purposeIds: selected.filter((p) => p !== "").join(","),
+    });
   };
 
   const handleDeadlineChange = (newValue: Dayjs | null) => {
@@ -163,6 +238,10 @@ export default function FormDialog({
     });
   };
 
+  const handleEnableChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setDisableDeadline(event.target.checked);
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -171,30 +250,39 @@ export default function FormDialog({
         variables: {
           referenceNum: referenceNum,
           subject,
+          purposeIds,
           description,
           receivedFrom,
           typeId: parseInt(typeId),
-          purposeId: parseInt(purposeId),
           signatureId: signatureId,
           tag: tag.length === 0 ? null : (tag as Tags),
-          dateDue: deadline.toISOString(),
+          dateDue: disableDeadline ? null : deadline.toISOString(),
+          assignedTo: assigned.map((officer) => officer.id),
         },
       });
     } else {
+      const referredTo = referrals;
+
+      // include BIN office if there are outsourced officers
+      if (referredTo.length === 0 && assigned.filter(officer => officer.id.includes("Add")).length > 0) {
+        referredTo.push(BIN_OFFICE);
+      }
+
       await createDocument({
         variables: {
           subject,
           description,
+          purposeIds,
           receivedFrom,
           typeId: parseInt(typeId),
-          purposeId: parseInt(purposeId),
           signatureId: signatureId,
           tag: tag.length === 0 ? null : (tag as Tags),
-          referredTo: referrals.map((office) => ({
+          referredTo: referredTo.map((office) => ({
             officeId: office,
             statusId: parseInt(statusId),
           })),
-          dateDue: deadline.toISOString(),
+          dateDue: disableDeadline ? null : deadline.toISOString(),
+          assignedTo: assigned.map((officer) => officer.id),
         },
       });
     }
@@ -213,7 +301,7 @@ export default function FormDialog({
       <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
         <form onSubmit={handleSubmit}>
           <DialogContent>
-            <Grid container spacing={3}>
+            <Grid container spacing={2}>
               <Grid item xs={12}>
                 {reference && (
                   <Typography variant="h6">
@@ -227,7 +315,7 @@ export default function FormDialog({
               </Grid>
 
               <Grid item xs={12} sm={12} md={8}>
-                <Grid container spacing={3}>
+                <Grid container spacing={2}>
                   <Grid item xs={12}>
                     <TextField
                       name="subject"
@@ -235,6 +323,8 @@ export default function FormDialog({
                       variant="outlined"
                       value={subject}
                       onChange={handleFormChange}
+                      multiline
+                      rows={referenceNum ? 5 : 4}
                       fullWidth
                       required
                     />
@@ -243,14 +333,13 @@ export default function FormDialog({
                   <Grid item xs={12}>
                     <TextField
                       name="description"
-                      label="Description"
+                      label="Remarks"
                       variant="outlined"
                       value={description}
                       onChange={handleFormChange}
                       multiline
-                      rows={4}
+                      rows={referenceNum ? 4 : 3}
                       fullWidth
-                      required
                     />
                   </Grid>
 
@@ -272,6 +361,7 @@ export default function FormDialog({
                         name="referredTo"
                         label="Referred To"
                         selected={referrals}
+                        required={assigned.length === 0}
                         options={offices.getOffices.map((office) => ({
                           id: parseInt(office.id),
                           label: office.name,
@@ -281,51 +371,121 @@ export default function FormDialog({
                     </Grid>
                   )}
 
-                  {types && (
-                    <Grid item xs={12} sm={6}>
-                      <TextField
-                        name="typeId"
-                        select
-                        label="Document Type"
-                        value={typeId}
-                        onChange={handleFormChange}
-                        variant="outlined"
-                        required
-                        fullWidth
-                      >
-                        {types.getDocumentTypes.map((option) => (
-                          <MenuItem key={option.id} value={option.id}>
-                            {option.label}
-                          </MenuItem>
-                        ))}
-                      </TextField>
-                    </Grid>
-                  )}
+                  {!referenceNum && (
+                    <Grid item xs={12}>
+                      <Autocomplete
+                        multiple
+                        options={officers.map((officer) => ({
+                          id: officer.uuid,
+                          label: `${officer.firstName} ${officer.lastName}`,
+                          description: officer.position,
+                        }))}
+                        value={assigned}
+                        onChange={(_, newValue) => {
+                          const outsourced = newValue.filter(
+                            (obj) =>
+                              obj.id.includes("Add") &&
+                              !officers.find(
+                                (officer) => officer.uuid === obj.id
+                              )
+                          );
+                          if (outsourced.length > 0) {
+                            setOfficers([
+                              ...officers,
+                              ...outsourced.map((obj) => ({
+                                uuid: obj.id,
+                                firstName: obj.label.split(" ", 2)[0],
+                                lastName: obj.label.split(" ", 2)[1],
+                                position: "",
+                              })),
+                            ]);
+                          }
 
-                  {purposes && (
-                    <Grid item xs={12} sm={6}>
-                      <TextField
-                        name="purposeId"
-                        select
-                        label="Document Purpose"
-                        value={purposeId}
-                        onChange={handleFormChange}
-                        variant="outlined"
-                        required
-                        fullWidth
-                      >
-                        {purposes.getDocumentPurposes.map((option) => (
-                          <MenuItem key={option.id} value={option.id}>
-                            {option.label}
-                          </MenuItem>
-                        ))}
-                      </TextField>
+                          handleAssignedChange(newValue);
+                        }}
+                        getOptionKey={(option) => option.id}
+                        getOptionLabel={(option) => option.label}
+                        isOptionEqualToValue={(option, value) => {
+                          return option.id === value.id;
+                        }}
+                        filterOptions={(options, params) => {
+                          const filtered = filter(options, params);
+
+                          if (params.inputValue !== "") {
+                            filtered.push({
+                              id: `Add ${params.inputValue}`,
+                              label: `"${params.inputValue}"`,
+                              description: "",
+                            });
+                          }
+
+                          return filtered;
+                        }}
+                        renderOption={(props, option) => (
+                          <Box component="li" {...props}>
+                            <Box
+                              component="div"
+                              sx={{ display: "flex", flexDirection: "column" }}
+                            >
+                              <Typography variant="body1">
+                                {option.label}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                color="textSecondary"
+                              >
+                                {option.description}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        )}
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            variant="outlined"
+                            label="Assigned To"
+                          />
+                        )}
+                      />
                     </Grid>
                   )}
                 </Grid>
               </Grid>
               <Grid item xs={12} sm={12} md={4}>
-                <Stack spacing={3}>
+                <Stack spacing={2}>
+                  {types && (
+                    <TextField
+                      name="typeId"
+                      select
+                      label="Document Type"
+                      value={typeId}
+                      onChange={handleFormChange}
+                      variant="outlined"
+                      required
+                      fullWidth
+                    >
+                      {types.getDocumentTypes.map((option) => (
+                        <MenuItem key={option.id} value={option.id}>
+                          {option.label}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  )}
+
+                  {purposes && (
+                    <MultiSelect
+                      name="purposeIds"
+                      label="Document Purpose"
+                      required={true}
+                      selected={purposeIds.split(",").filter((p) => p !== "")}
+                      options={purposes.getDocumentPurposes.map((purpose) => ({
+                        id: purpose.id,
+                        label: purpose.label,
+                      }))}
+                      onChange={handlePurposeChange}
+                    />
+                  )}
+
                   {statuses && !referenceNum && (
                     <TextField
                       name="statusId"
@@ -352,12 +512,6 @@ export default function FormDialog({
                     </TextField>
                   )}
 
-                  <DatePicker
-                    label="Deadline"
-                    value={deadline}
-                    onChange={handleDeadlineChange}
-                  />
-
                   <TextField
                     name="tag"
                     select
@@ -372,6 +526,24 @@ export default function FormDialog({
                     <MenuItem value="TOP_PRIORITY">Top Priority</MenuItem>
                     <MenuItem value="FOLLOW_UP">Follow Up</MenuItem>
                   </TextField>
+
+                  <Stack>
+                    <DatePicker
+                      label="Deadline"
+                      value={deadline}
+                      disable={disableDeadline}
+                      onChange={handleDeadlineChange}
+                    />
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={disableDeadline}
+                          onChange={handleEnableChange}
+                        />
+                      }
+                      label="No Deadline"
+                    />
+                  </Stack>
 
                   {signatories && (
                     <TextField
@@ -428,7 +600,8 @@ export default function FormDialog({
           typesError?.message ||
           referenceError?.message ||
           getError?.message ||
-          signatoryError?.message
+          signatoryError?.message ||
+          officersError?.message
         }
       />
     </>

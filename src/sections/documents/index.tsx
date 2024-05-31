@@ -128,7 +128,7 @@ export default function DeocumentsPage() {
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <ChartSummary
-            title="No Action"
+            title="Not Actionable"
             total={statistics ? statistics.getDocumentStatistics.noaction : 0}
             color="success"
             icon={
